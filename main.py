@@ -11,8 +11,8 @@ def read_xyz_file(path, first_line_offset=2):
             [[float(coord) for coord in line.split()[1:]] for line in slines]]
 
 
-def r(c1, c2):
-    return math.sqrt(math.pow(c1[0] - c2[0], 2) + math.pow(c1[1] - c2[1], 2) + math.pow(c1[2] - c2[2], 2))
+def dist(v1, v2):
+    return math.sqrt(math.pow(v1[0] - v2[0], 2) + math.pow(v1[1] - v2[1], 2) + math.pow(v1[2] - v2[2], 2))
 
 
 #   Возвращает центр масс [x,y,z].
@@ -28,12 +28,9 @@ def calc_center_of_mass(coords, masses):
 
 #   Возвращает массив расстояний |r_cm - r_i|.
 #   Входные параметры: массив координат [][x,y,z] и массив масс []
-def calc_cm_array(coords, masses):
-    result = []
+def calc_d_array(coords, masses):
     cm = calc_center_of_mass(coords, masses)
-    for i in range(len(coords)):
-        result.append(r(coords[i], cm))
-    return sorted(result)
+    return sorted([dist(coord, cm) for coord in coords])
 
 
 def gauss(x, sigma, mu):
@@ -43,38 +40,38 @@ def gauss(x, sigma, mu):
 #   Строит массив точек x, y для отображения [[],[]]
 #   Входные параметры: массив расстояний [], левая и правая граница отображения по x, величина шага для отображения,
 #   сигма для гауссовской функции
-def calc_parr(parr, r_min, r_max, step, sigma):
+def calc_xy_arrays(d_array, r_min, r_max, step, sigma):
     r_len = r_max - r_min
     npoints = int(r_len / step) + 1
     x_arr = np.linspace(r_min, r_max, npoints)
     y_arr = [0] * npoints
 
     for i in range(npoints):
-        for pt in parr:
+        for pt in d_array:
             y_arr[i] += gauss(x_arr[i], sigma, pt)
 
     return [x_arr, y_arr]
 
 
-def find_r_min_max(points):
+def find_r_min_max(d_arrays):
     g_min = 0
     g_max = 0
-    for parr in points:
-        g_min = min(g_min, parr[0])
-        g_max = max(g_max, parr[len(parr) - 1])
+    for d_array in d_arrays:
+        g_min = min(g_min, min(d_array))
+        g_max = max(g_max, max(d_array))
     return [g_min, g_max]
 
 
 #   Вычисляет массив расстояний для каждого заданного в аргументах файла [][].
-def calc_points(file_names):
-    points = []
+def calc_d_arrays(file_names):
+    d_arrays = []
     for filename in file_names:
         read_result = read_xyz_file(filename)
         coords = read_result[1]  # координаты частиц [][x,y,z]
         masses = [masses_lib[mass_id] for mass_id in read_result[0]]  # массы частиц []
-        rarr = calc_cm_array(coords, masses)  # массив расстояний от центра массы до частиц |r_cm - r_i|
-        points.append(rarr)
-    return points
+        d_array = calc_d_array(coords, masses)  # массив расстояний от центра массы до частиц |r_cm - r_i|
+        d_arrays.append(d_array)
+    return d_arrays
 
 
 ########################################################################################################################
@@ -85,25 +82,25 @@ masses_lib = {
     'Au': 196.966
 }
 
-points = []
-file_names = ["example3.xyz", "example4.xyz"]
+d_arrays = []
+file_names = ["example3.xyz", "example4.xyz", "example2.xyz"]
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         file_names = sys.argv[1:]
     # else:
-        # raise SystemExit
-    points = calc_points(file_names)
+    # raise SystemExit
+    d_arrays = calc_d_arrays(file_names)
 
-c_result = []
+xy_result_arrays = []
 
-r_min_max = find_r_min_max(points)
+r_min_max = find_r_min_max(d_arrays)
 
-for parr in points:
-    c_result.append(calc_parr(parr, r_min_max[0], r_min_max[1], 0.01, 0.01))
+for d_array in d_arrays:
+    xy_result_arrays.append(calc_xy_arrays(d_array, r_min_max[0], r_min_max[1], 0.01, 0.01))
 
-for ln in c_result:
-    plt.plot(ln[0], ln[1], '-')
+for xy_ra in xy_result_arrays:
+    plt.plot(xy_ra[0], xy_ra[1], '-')
 
 plt.legend(file_names)
 plt.show()
