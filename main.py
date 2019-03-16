@@ -45,11 +45,9 @@ def calc_xy_arrays(d_array, r_min, r_max, step, sigma):
     npoints = int(r_len / step) + 1
     x_arr = np.linspace(r_min, r_max, npoints)
     y_arr = [0] * npoints
-
     for i in range(npoints):
         for pt in d_array:
             y_arr[i] += gauss(x_arr[i], sigma, pt)
-
     return [x_arr, y_arr]
 
 
@@ -82,22 +80,18 @@ masses_lib = {
     'Au': 196.966
 }
 
-d_arrays = []
-file_names = ["example3.xyz", "example4.xyz", "example2.xyz"]
+# file_names = ["example1.xyz", "example2.xyz"]
+file_names = ["example2.xyz", "example3.xyz", "example4.xyz"]
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         file_names = sys.argv[1:]
     # else:
     # raise SystemExit
-    d_arrays = calc_d_arrays(file_names)
 
-xy_result_arrays = []
-
+d_arrays = calc_d_arrays(file_names)
 r_min_max = find_r_min_max(d_arrays)
-
-for d_array in d_arrays:
-    xy_result_arrays.append(calc_xy_arrays(d_array, r_min_max[0], r_min_max[1], 0.01, 0.01))
+xy_result_arrays = [calc_xy_arrays(d_array, r_min_max[0], r_min_max[1], 0.01, 0.01) for d_array in d_arrays]
 
 for xy_ra in xy_result_arrays:
     plt.plot(xy_ra[0], xy_ra[1], '-')
