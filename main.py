@@ -86,22 +86,24 @@ masses_lib = {
 }
 
 points = []
+file_names = ["example3.xyz", "example4.xyz"]
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        points = calc_points(sys.argv[1:])
-    else:
+        file_names = sys.argv[1:]
+    # else:
         # raise SystemExit
-        points = calc_points(["example3.xyz", "example4.xyz"])
+    points = calc_points(file_names)
 
 c_result = []
 
 r_min_max = find_r_min_max(points)
 
 for parr in points:
-    c_result.append(calc_parr(parr, r_min_max[0], r_min_max[1], 0.01, 0.001))
+    c_result.append(calc_parr(parr, r_min_max[0], r_min_max[1], 0.01, 0.01))
 
 for ln in c_result:
     plt.plot(ln[0], ln[1], '-')
 
+plt.legend(file_names)
 plt.show()
